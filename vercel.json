@@ -1,12 +1,4 @@
 {
   "buildCommand": "prisma generate && prisma migrate deploy && npm run build",
-  "regions": ["fra1"],
-  "_crons_note": "Add the crons array below once /api/cron/renewal-reminders is implemented (requires Vercel Pro).",
-  "_crons_template": [
-    {
-      "path": "/api/cron/renewal-reminders",
-      "schedule": "0 7 * * *",
-      "_note": "Daily at 07:00 UTC — M-Pesa subscription renewal reminders"
-    }
-  ]
+  "regions": ["fra1"]
 }
