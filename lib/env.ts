@@ -9,9 +9,9 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url(),
 
-  // Auth
-  NEXTAUTH_SECRET: z.string().min(1),
-  NEXTAUTH_URL: z.string().url(),
+  // Auth (Auth.js v5)
+  AUTH_SECRET: z.string().min(1),
+  AUTH_URL: z.string().url().optional(),
 
   // Bunny Stream
   BUNNY_API_KEY: z.string().min(1),

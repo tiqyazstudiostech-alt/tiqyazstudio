@@ -31,9 +31,10 @@ model User {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  accounts Account[]
-  sessions Session[]
-  profile  Profile?
+  accounts            Account[]
+  sessions            Session[]
+  profile             Profile?
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
 }
@@ -76,6 +77,18 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expires   DateTime
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
 }
 
 // ---------------------------------------------------------------------------
