@@ -38,6 +38,10 @@ const envSchema = z.object({
   PAYSTACK_SECRET_KEY: z.string().min(1),
   NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY: z.string().min(1),
 
+  // Google OAuth
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+
   // Anthropic (AI features)
   ANTHROPIC_API_KEY: z.string().min(1),
 });

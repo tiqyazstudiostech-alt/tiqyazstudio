@@ -85,6 +85,10 @@ export async function signInAction(
   return { success: "Signed in." };
 }
 
+export async function signInWithGoogleAction(): Promise<void> {
+  await signIn("google", { redirectTo: "/watch" });
+}
+
 export async function signOutAction(): Promise<void> {
   await signOut({ redirectTo: "/" });
 }
