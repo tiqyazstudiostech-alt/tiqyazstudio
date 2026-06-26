@@ -24,11 +24,12 @@ export async function savePreferencesAction(
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const profile = await db.profile.findUnique({
-    where: { userId: session.user.id },
+  const profile = await db.profile.upsert({
+    where:  { userId: session.user.id },
+    update: {},
+    create: { userId: session.user.id, preferences: {} },
     select: { id: true },
   });
-  if (!profile) return { error: "Profile not found." };
 
   await db.profile.update({
     where: { id: profile.id },
