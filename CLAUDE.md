@@ -39,6 +39,10 @@ Vercel-proprietary services, standard Postgres only.
   browser -> Bunny directly (TUS/resumable).
 - All playback URLs are token-signed; no raw stream URLs in the client.
 
+## Event logging (critical)
+All user interactions (play, skip, like, watchlist, search, onboarding) MUST be
+recorded via `lib/events.ts` `logEvent()`. Never write WatchEvent rows directly.
+
 ## Workflow
 - One vertical slice per task (schema -> API -> UI), end to end.
 - Conventional commits, one feature per commit. Typecheck + lint before committing.

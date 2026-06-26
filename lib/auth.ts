@@ -46,6 +46,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      // PrismaAdapter creates the User row for OAuth sign-ins but knows nothing
+      // about our application-level Profile. Ensure one exists before the user
+      // reaches any protected page.
+      if (account?.type === "oauth" && user?.id) {
+        await db.profile.upsert({
+          where:  { userId: user.id },
+          update: {},
+          create: { userId: user.id, preferences: {} },
+        });
+      }
+      return true;
+    },
+
     authorized({ auth: session, request: { nextUrl } }) {
       const isLoggedIn = !!session?.user;
       const { pathname } = nextUrl;

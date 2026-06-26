@@ -15,6 +15,21 @@ enum Role {
   ADMIN
 }
 
+enum EventType {
+  ONBOARDING_COMPLETED
+  PLAY_START
+  PLAY_PROGRESS
+  PLAY_COMPLETE
+  PLAY_ABANDON
+  SKIP
+  LIKE
+  DISLIKE
+  WATCHLIST_ADD
+  WATCHLIST_REMOVE
+  SEARCH
+  SEARCH_NO_RESULTS
+}
+
 // ---------------------------------------------------------------------------
 // Auth.js v5 models (@auth/prisma-adapter)
 // ---------------------------------------------------------------------------
@@ -35,6 +50,7 @@ model User {
   sessions            Session[]
   profile             Profile?
   passwordResetTokens PasswordResetToken[]
+  watchEvents         WatchEvent[]
 
   @@map("users")
 }
@@ -92,19 +108,65 @@ model PasswordResetToken {
 }
 
 // ---------------------------------------------------------------------------
+// Taxonomy
+// ---------------------------------------------------------------------------
+
+model Genre {
+  id           String  @id @default(cuid())
+  slug         String  @unique
+  name         String
+  isActive     Boolean @default(true) @map("is_active")
+  displayOrder Int     @default(0) @map("display_order")
+
+  profiles Profile[] @relation("ProfileGenres")
+
+  @@map("genres")
+}
+
+model Language {
+  id       String  @id @default(cuid())
+  code     String  @unique
+  name     String
+  isActive Boolean @default(true) @map("is_active")
+
+  profiles Profile[] @relation("ProfileLanguages")
+
+  @@map("languages")
+}
+
+// ---------------------------------------------------------------------------
 // App models
 // ---------------------------------------------------------------------------
 
 model Profile {
-  id             String   @id @default(cuid())
-  userId         String   @unique @map("user_id")
-  preferences    Json     @default("{}")
-  avatarUrl      String?  @map("avatar_url")
-  selectedGenres String[] @map("selected_genres")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id                   String   @id @default(cuid())
+  userId               String   @unique @map("user_id")
+  preferences          Json     @default("{}")
+  onboardingCompleted  Boolean  @default(false) @map("onboarding_completed")
+  avatarUrl            String?  @map("avatar_url")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  genres             Genre[]    @relation("ProfileGenres")
+  preferredLanguages Language[] @relation("ProfileLanguages")
+
+  @@map("profiles")
+}
+
+model WatchEvent {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  titleId   String?   @map("title_id")
+  episodeId String?   @map("episode_id")
+  type      EventType
+  value     Float?
+  metadata  Json?
+  createdAt DateTime  @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("profiles")
+  @@index([userId, type])
+  @@index([titleId])
+  @@map("watch_events")
 }
