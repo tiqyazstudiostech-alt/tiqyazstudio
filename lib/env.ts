@@ -17,6 +17,8 @@ const envSchema = z.object({
   BUNNY_API_KEY: z.string().min(1),
   BUNNY_STREAM_LIBRARY_ID: z.string().min(1),
   BUNNY_STREAM_CDN_HOSTNAME: z.string().min(1),
+  BUNNY_TOKEN_AUTH_KEY: z.string().min(1),
+  BUNNY_WEBHOOK_SECRET: z.string().min(1).optional(),
 
   // Bunny Storage (images / attachments)
   BUNNY_STORAGE_ZONE: z.string().min(1),

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input } from "@/components/ui";
+import { Button } from "@/components/ui";
 import {
   createSeasonAction,
   updateSeasonAction,
@@ -11,35 +11,43 @@ import {
   updateEpisodeAction,
   softDeleteEpisodeAction,
 } from "@/app/actions/titles";
+import { VideoUpload } from "./video-upload";
 import type { VideoStatus } from "@prisma/client";
 
 interface EpisodeRow {
-  id: string;
-  number: number;
-  title: string | null;
-  synopsis: string | null;
-  durationSec: number | null;
+  id:           string;
+  number:       number;
+  title:        string | null;
+  synopsis:     string | null;
+  durationSec:  number | null;
   thumbnailUrl: string | null;
-  status: VideoStatus;
+  bunnyVideoId: string | null;
+  status:       VideoStatus;
 }
 
 interface SeasonRow {
-  id: string;
-  number: number;
-  name: string | null;
+  id:       string;
+  number:   number;
+  name:     string | null;
   episodes: EpisodeRow[];
 }
 
 type Mode =
   | { type: "idle" }
   | { type: "add-season" }
-  | { type: "edit-season"; seasonId: string }
-  | { type: "add-episode"; seasonId: string }
+  | { type: "edit-season";  seasonId: string }
+  | { type: "add-episode";  seasonId: string }
   | { type: "edit-episode"; episodeId: string; seasonId: string };
 
 const inputCls =
   "w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-ink " +
   "focus:outline-none focus-visible:ring-2 focus-visible:ring-gold";
+
+const STATUS_CLS: Record<VideoStatus, string> = {
+  PROCESSING: "text-warning",
+  READY:      "text-success",
+  ERROR:      "text-error",
+};
 
 function durationLabel(sec: number | null) {
   if (!sec) return "—";
@@ -59,7 +67,10 @@ export function SeasonsEditor({ titleId, seasons }: Props) {
   const [error, setError]     = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function submit(action: (p: null, fd: FormData) => Promise<{ error: string } | { success: string; id?: string } | null>, fd: FormData) {
+  async function submit(
+    action: (p: null, fd: FormData) => Promise<{ error: string } | { success: string; id?: string } | null>,
+    fd: FormData,
+  ) {
     setLoading(true);
     setError(null);
     const result = await action(null, fd);
@@ -139,7 +150,7 @@ export function SeasonsEditor({ titleId, seasons }: Props) {
                   <input name="name" type="text" defaultValue={season.name ?? ""} className={inputCls} />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Button type="submit" size="sm" loading={loading}>Save</Button>
                 <Button type="button" size="sm" variant="ghost" onClick={() => { setMode({ type: "idle" }); setError(null); }}>Cancel</Button>
                 <form
@@ -172,45 +183,68 @@ export function SeasonsEditor({ titleId, seasons }: Props) {
             </div>
           )}
 
-          {/* Episodes list */}
+          {/* Episodes */}
           <ul className="divide-y divide-border">
             {season.episodes.map((ep) => (
               <li key={ep.id}>
                 {mode.type === "edit-episode" && mode.episodeId === ep.id ? (
-                  <form
-                    className="p-4 flex flex-col gap-3"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const fd = new FormData(e.currentTarget);
-                      fd.set("id", ep.id);
-                      fd.set("titleId", titleId);
-                      fd.set("seasonId", season.id);
-                      submit(updateEpisodeAction, fd);
-                    }}
-                  >
-                    <EpisodeFields defaultValues={ep} />
-                    <div className="flex gap-2">
-                      <Button type="submit" size="sm" loading={loading}>Save</Button>
-                      <Button type="button" size="sm" variant="ghost" onClick={() => { setMode({ type: "idle" }); setError(null); }}>Cancel</Button>
-                      <form
-                        className="ml-auto"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const fd = new FormData(e.currentTarget);
-                          submit(softDeleteEpisodeAction, fd);
-                        }}
-                      >
-                        <input type="hidden" name="id" value={ep.id} />
-                        <input type="hidden" name="titleId" value={titleId} />
-                        <Button type="submit" size="sm" variant="ghost" className="text-error">Delete</Button>
-                      </form>
+                  <div className="p-4 flex flex-col gap-4">
+                    <form
+                      className="flex flex-col gap-3"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const fd = new FormData(e.currentTarget);
+                        fd.set("id", ep.id);
+                        fd.set("titleId", titleId);
+                        fd.set("seasonId", season.id);
+                        submit(updateEpisodeAction, fd);
+                      }}
+                    >
+                      <EpisodeFields defaultValues={ep} />
+                      <div className="flex gap-2 items-center">
+                        <Button type="submit" size="sm" loading={loading}>Save</Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => { setMode({ type: "idle" }); setError(null); }}>Cancel</Button>
+                        <form
+                          className="ml-auto"
+                          onSubmit={(e) => {
+                            e.preventDefault();
+                            const fd = new FormData(e.currentTarget);
+                            submit(softDeleteEpisodeAction, fd);
+                          }}
+                        >
+                          <input type="hidden" name="id" value={ep.id} />
+                          <input type="hidden" name="titleId" value={titleId} />
+                          <Button type="submit" size="sm" variant="ghost" className="text-error">Delete</Button>
+                        </form>
+                      </div>
+                    </form>
+
+                    {/* Video upload — only in edit mode */}
+                    <div className="border-t border-border pt-3">
+                      <VideoUpload
+                        episodeId={ep.id}
+                        videoTitle={ep.title ?? `Episode ${ep.number}`}
+                        currentStatus={ep.status}
+                        bunnyVideoId={ep.bunnyVideoId}
+                        thumbnailUrl={ep.thumbnailUrl}
+                      />
                     </div>
-                  </form>
+                  </div>
                 ) : (
                   <div className="flex items-center justify-between px-4 py-3">
-                    <div>
-                      <p className="text-sm text-ink">E{ep.number}. {ep.title ?? "(untitled)"}</p>
-                      <p className="text-xs text-ink-muted">{durationLabel(ep.durationSec)} · {ep.status}</p>
+                    <div className="flex items-center gap-3">
+                      {ep.status === "READY" && ep.thumbnailUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={ep.thumbnailUrl} alt="" className="h-9 w-16 rounded object-cover shrink-0" />
+                      )}
+                      <div>
+                        <p className="text-sm text-ink">E{ep.number}. {ep.title ?? "(untitled)"}</p>
+                        <p className="text-xs">
+                          <span className="text-ink-muted">{durationLabel(ep.durationSec)}</span>
+                          {" · "}
+                          <span className={STATUS_CLS[ep.status]}>{ep.status}</span>
+                        </p>
+                      </div>
                     </div>
                     <Button
                       type="button"
@@ -253,7 +287,7 @@ export function SeasonsEditor({ titleId, seasons }: Props) {
 }
 
 function EpisodeFields({ defaultValues }: { defaultValues?: Partial<EpisodeRow & { number: number }> }) {
-  const inputCls =
+  const cls =
     "w-full bg-surface border border-border rounded-lg px-3 py-2 text-sm text-ink " +
     "focus:outline-none focus-visible:ring-2 focus-visible:ring-gold";
 
@@ -261,23 +295,23 @@ function EpisodeFields({ defaultValues }: { defaultValues?: Partial<EpisodeRow &
     <div className="grid grid-cols-2 gap-3">
       <div className="flex flex-col gap-1">
         <label className="text-xs text-ink-muted">Episode number</label>
-        <input name="number" type="number" min={1} defaultValue={defaultValues?.number ?? 1} className={inputCls} required />
+        <input name="number" type="number" min={1} defaultValue={defaultValues?.number ?? 1} className={cls} required />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs text-ink-muted">Episode title</label>
-        <input name="title" type="text" defaultValue={defaultValues?.title ?? ""} placeholder="First Light" className={inputCls} />
+        <input name="title" type="text" defaultValue={defaultValues?.title ?? ""} placeholder="First Light" className={cls} />
       </div>
       <div className="col-span-2 flex flex-col gap-1">
         <label className="text-xs text-ink-muted">Synopsis</label>
-        <textarea name="synopsis" rows={2} defaultValue={defaultValues?.synopsis ?? ""} className={inputCls} />
+        <textarea name="synopsis" rows={2} defaultValue={defaultValues?.synopsis ?? ""} className={cls} />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs text-ink-muted">Duration (seconds)</label>
-        <input name="durationSec" type="number" min={1} defaultValue={defaultValues?.durationSec ?? ""} placeholder="2700" className={inputCls} />
+        <input name="durationSec" type="number" min={1} defaultValue={defaultValues?.durationSec ?? ""} placeholder="2700" className={cls} />
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs text-ink-muted">Thumbnail URL</label>
-        <input name="thumbnailUrl" type="url" defaultValue={defaultValues?.thumbnailUrl ?? ""} placeholder="https://…" className={inputCls} />
+        <input name="thumbnailUrl" type="url" defaultValue={defaultValues?.thumbnailUrl ?? ""} placeholder="https://…" className={cls} />
       </div>
     </div>
   );

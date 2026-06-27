@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { TitleType, ContentStatus, VideoStatus, type Role } from "@prisma/client";
+import type { Role } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -53,7 +53,7 @@ export async function requestContentImageUploadAction(
 // ─── Title CRUD ───────────────────────────────────────────────────────────────
 
 const titleInputSchema = z.object({
-  type:          z.nativeEnum(TitleType),
+  type:          z.enum(["FILM", "SERIES", "PODCAST"] as const),
   title:         z.string().min(1, "Title is required").max(200),
   slug:          z.string().min(1, "Slug is required").max(200)
                    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens only"),
@@ -64,7 +64,7 @@ const titleInputSchema = z.object({
   ),
   maturityRating: z.string().optional(),
   isPremium:      z.preprocess((v) => v === "on", z.boolean()),
-  status:         z.nativeEnum(ContentStatus),
+  status:         z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"] as const),
   posterUrl:      z.preprocess((v) => (v === "" ? undefined : v), z.string().optional()),
   backdropUrl:    z.preprocess((v) => (v === "" ? undefined : v), z.string().optional()),
   trailerUrl:     z.preprocess((v) => (v === "" ? undefined : v), z.string().optional()),
@@ -94,9 +94,9 @@ export async function createTitleAction(
     },
   });
 
-  if (created.type === TitleType.FILM) {
+  if (created.type === "FILM") {
     await db.episode.create({
-      data: { titleId: created.id, number: 1, title: created.title, status: VideoStatus.PROCESSING },
+      data: { titleId: created.id, number: 1, title: created.title, status: "PROCESSING" },
     });
   }
 
@@ -236,7 +236,7 @@ export async function createEpisodeAction(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const episode = await db.episode.create({
-    data: { ...parsed.data, status: VideoStatus.PROCESSING },
+    data: { ...parsed.data, status: "PROCESSING" },
   });
   revalidatePath(`/admin/titles/${parsed.data.titleId}/edit`);
   return { success: "Episode added.", id: episode.id };

@@ -21,8 +21,8 @@ export default async function EditTitlePage({ params }: PageProps) {
         orderBy: { number: "asc" },
         select: {
           id: true, number: true, title: true, synopsis: true,
-          durationSec: true, thumbnailUrl: true, status: true,
-          seasonId: true,
+          durationSec: true, thumbnailUrl: true, bunnyVideoId: true,
+          status: true, seasonId: true,
         },
       },
       seasons: {

@@ -2,7 +2,6 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { Plan } from "@prisma/client";
 import type { Role } from "@prisma/client";
 import { z } from "zod";
 
@@ -10,7 +9,7 @@ export type AdminActionResult = { error: string } | { success: string };
 
 const setPlanSchema = z.object({
   userId: z.string().min(1),
-  plan: z.nativeEnum(Plan),
+  plan: z.enum(["FREE", "PREMIUM"] as const),
 });
 
 export async function setUserPlanAction(

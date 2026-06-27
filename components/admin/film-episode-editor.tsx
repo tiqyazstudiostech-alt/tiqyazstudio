@@ -3,18 +3,20 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui";
 import { updateEpisodeAction, type ContentActionResult } from "@/app/actions/titles";
+import { VideoUpload } from "./video-upload";
 import type { VideoStatus } from "@prisma/client";
 
 interface Props {
   titleId: string;
   episode: {
-    id: string;
-    number: number;
-    title: string | null;
-    synopsis: string | null;
-    durationSec: number | null;
+    id:           string;
+    number:       number;
+    title:        string | null;
+    synopsis:     string | null;
+    durationSec:  number | null;
     thumbnailUrl: string | null;
-    status: VideoStatus;
+    bunnyVideoId: string | null;
+    status:       VideoStatus;
   };
 }
 
@@ -29,15 +31,17 @@ export function FilmEpisodeEditor({ titleId, episode }: Props) {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <h2 className="text-base font-semibold text-ink">Feature film episode</h2>
+
+      {/* Metadata form */}
       <form action={action} className="flex flex-col gap-4">
-        <input type="hidden" name="id" value={episode.id} />
-        <input type="hidden" name="titleId" value={titleId} />
-        <input type="hidden" name="number" value={episode.number} />
+        <input type="hidden" name="id"       value={episode.id} />
+        <input type="hidden" name="titleId"  value={titleId} />
+        <input type="hidden" name="number"   value={episode.number} />
         <input type="hidden" name="seasonId" value="" />
 
-        {state && "error" in state && <p className="text-sm text-error">{state.error}</p>}
+        {state && "error"   in state && <p className="text-sm text-error">{state.error}</p>}
         {state && "success" in state && <p className="text-sm text-success">{state.success}</p>}
 
         <div className="grid grid-cols-2 gap-4">
@@ -59,11 +63,21 @@ export function FilmEpisodeEditor({ titleId, episode }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div>
           <Button type="submit" size="sm" loading={isPending}>Save episode</Button>
-          <span className="text-xs text-ink-muted">Status: {episode.status}</span>
         </div>
       </form>
+
+      {/* Video upload */}
+      <div className="border-t border-border pt-4">
+        <VideoUpload
+          episodeId={episode.id}
+          videoTitle={episode.title ?? "Feature Film"}
+          currentStatus={episode.status}
+          bunnyVideoId={episode.bunnyVideoId}
+          thumbnailUrl={episode.thumbnailUrl}
+        />
+      </div>
     </div>
   );
 }
