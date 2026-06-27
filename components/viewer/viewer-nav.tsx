@@ -1,9 +1,20 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
 import { ProfileMenu } from "./profile-menu";
 
 export async function ViewerNav() {
   const session = await auth();
+
+  // Profile.avatarUrl is the user-uploaded photo (R2). Fall back to OAuth image.
+  const profile = session?.user?.id
+    ? await db.profile.findUnique({
+        where: { userId: session.user.id },
+        select: { avatarUrl: true },
+      })
+    : null;
+
+  const avatarImage = profile?.avatarUrl ?? session?.user?.image ?? null;
 
   return (
     <header className="fixed top-0 inset-x-0 z-30 h-14 bg-background/90 backdrop-blur-md border-b border-border/50 flex items-center px-6 gap-6">
@@ -23,7 +34,7 @@ export async function ViewerNav() {
         <ProfileMenu
           name={session.user.name ?? null}
           email={session.user.email ?? null}
-          image={session.user.image ?? null}
+          image={avatarImage}
         />
       )}
     </header>
