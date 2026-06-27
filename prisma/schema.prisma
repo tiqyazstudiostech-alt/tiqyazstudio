@@ -15,6 +15,24 @@ enum Role {
   ADMIN
 }
 
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  GRACE
+}
+
+enum RenewalType {
+  NONE
+  AUTO_CARD
+  MANUAL_MPESA
+}
+
 enum EventType {
   ONBOARDING_COMPLETED
   PLAY_START
@@ -49,6 +67,7 @@ model User {
   accounts            Account[]
   sessions            Session[]
   profile             Profile?
+  subscription        Subscription?
   passwordResetTokens PasswordResetToken[]
   watchEvents         WatchEvent[]
 
@@ -152,6 +171,22 @@ model Profile {
   preferredLanguages Language[] @relation("ProfileLanguages")
 
   @@map("profiles")
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  userId           String             @unique @map("user_id")
+  plan             Plan               @default(FREE)
+  status           SubscriptionStatus @default(ACTIVE)
+  renewalType      RenewalType        @default(NONE)
+  currentPeriodEnd DateTime?          @map("current_period_end")
+  isDeleted        Boolean            @default(false) @map("is_deleted")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
 }
 
 model WatchEvent {

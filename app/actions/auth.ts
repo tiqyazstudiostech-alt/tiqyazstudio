@@ -44,7 +44,8 @@ export async function registerAction(
       name,
       email,
       hashedPassword,
-      profile: { create: { preferences: {} } },
+      profile:      { create: { preferences: {} } },
+      subscription: { create: {} },
     },
   });
 

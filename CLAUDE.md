@@ -43,6 +43,11 @@ Vercel-proprietary services, standard Postgres only.
 All user interactions (play, skip, like, watchlist, search, onboarding) MUST be
 recorded via `lib/events.ts` `logEvent()`. Never write WatchEvent rows directly.
 
+## Entitlements (critical)
+All content access + stream quality decisions go through `lib/entitlements.ts`.
+Never check `plan` inline — always call `getEntitlements(userId)` and use
+`canAccessTitle()` / `canStreamQuality()`.
+
 ## Workflow
 - One vertical slice per task (schema -> API -> UI), end to end.
 - Conventional commits, one feature per commit. Typecheck + lint before committing.

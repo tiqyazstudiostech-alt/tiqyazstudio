@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient, Role, Plan } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
@@ -76,6 +76,14 @@ async function main() {
     include: { profile: true },
   });
   console.log(`Seeded admin user: ${admin.email} (id: ${admin.id})`);
+
+  // Admin subscription
+  await prisma.subscription.upsert({
+    where:  { userId: admin.id },
+    update: {},
+    create: { userId: admin.id, plan: Plan.PREMIUM },
+  });
+  console.log("Seeded admin subscription (PREMIUM).");
 }
 
 main()

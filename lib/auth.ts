@@ -51,11 +51,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // about our application-level Profile. Ensure one exists before the user
       // reaches any protected page.
       if (account?.type === "oauth" && user?.id) {
-        await db.profile.upsert({
-          where:  { userId: user.id },
-          update: {},
-          create: { userId: user.id, preferences: {} },
-        });
+        await Promise.all([
+          db.profile.upsert({
+            where:  { userId: user.id },
+            update: {},
+            create: { userId: user.id, preferences: {} },
+          }),
+          db.subscription.upsert({
+            where:  { userId: user.id },
+            update: {},
+            create: { userId: user.id },
+          }),
+        ]);
       }
       return true;
     },
