@@ -44,5 +44,5 @@ export async function completeOnboardingAction(
 
   await logEvent({ userId: session.user.id, type: "ONBOARDING_COMPLETED" });
 
-  redirect("/watch");
+  redirect("/home");
 }

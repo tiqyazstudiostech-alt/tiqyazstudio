@@ -9,6 +9,7 @@ interface PosterCardProps {
   backdropUrl?: string;
   type: TitleType;
   isPremium: boolean;
+  className?: string;
 }
 
 const typeLabel: Record<TitleType, string> = {
@@ -17,11 +18,11 @@ const typeLabel: Record<TitleType, string> = {
   PODCAST: "Podcast",
 };
 
-export function PosterCard({ href, title, posterUrl, backdropUrl, type, isPremium }: PosterCardProps) {
+export function PosterCard({ href, title, posterUrl, backdropUrl, type, isPremium, className }: PosterCardProps) {
   const imageUrl = posterUrl ?? backdropUrl;
 
   return (
-    <Link href={href} className="group flex flex-col gap-2">
+    <Link href={href} className={`group flex flex-col gap-2${className ? ` ${className}` : ""}`}>
       <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-surface-raised group-hover:ring-1 group-hover:ring-gold/40 transition-all duration-200">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

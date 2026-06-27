@@ -11,7 +11,7 @@ export default async function OnboardingPage() {
     where: { userId: session.user.id },
     select: { onboardingCompleted: true },
   });
-  if (profile?.onboardingCompleted) redirect("/watch");
+  if (profile?.onboardingCompleted) redirect("/home");
 
   const [genres, languages] = await Promise.all([
     db.genre.findMany({ where: { isActive: true }, orderBy: { displayOrder: "asc" } }),

@@ -50,7 +50,7 @@ export async function registerAction(
   });
 
   try {
-    await signIn("credentials", { email, password, redirectTo: "/watch" });
+    await signIn("credentials", { email, password, redirectTo: "/home" });
   } catch (error) {
     if (error instanceof AuthError) {
       return { error: "Account created but sign-in failed. Please sign in manually." };
@@ -74,7 +74,7 @@ export async function signInAction(
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/watch",
+      redirectTo: "/home",
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -87,7 +87,7 @@ export async function signInAction(
 }
 
 export async function signInWithGoogleAction(): Promise<void> {
-  await signIn("google", { redirectTo: "/watch" });
+  await signIn("google", { redirectTo: "/home" });
 }
 
 export async function signOutAction(): Promise<void> {

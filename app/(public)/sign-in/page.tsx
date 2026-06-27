@@ -5,7 +5,7 @@ import { SignInForm } from "./sign-in-form";
 
 export default async function SignInPage() {
   const session = await auth();
-  if (session) redirect("/watch");
+  if (session) redirect("/home");
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4">
