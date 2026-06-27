@@ -61,18 +61,32 @@ export function getThumbnailUrl(videoId: string): string {
   return `https://${cdnHost}/${videoId}/thumbnail.jpg`;
 }
 
-// Token-signed HLS playback URL (Phase 3).
-// Algorithm: SHA256(TOKEN_AUTH_KEY + path + expires), appended as ?token=…&expires=…
-export function getSignedPlaybackUrl(videoId: string, expiresIn = 86400): string {
+// Returns a token-signed HLS URL that covers the video's entire directory, so
+// playlist.m3u8 AND every .ts segment are authorized by one token.
+//
+// Bunny directory-token algorithm:
+//   hash  = Base64URL( SHA256( key + expires + tokenPath ) )
+//   URL   = https://{host}/{videoId}/playlist.m3u8
+//             ?token={hash}&expires={expires}&token_path={tokenPath}
+//
+// token_path restricts the token to any CDN path that starts with tokenPath,
+// which covers /{videoId}/playlist.m3u8 and all /{videoId}/*.ts segments.
+export function getSignedPlaybackUrl(videoId: string, expiresIn = 21600): string {
   const { cdnHost } = requireStream();
-  const tokenKey = env.BUNNY_TOKEN_AUTH_KEY;
+  const tokenKey  = env.BUNNY_TOKEN_AUTH_KEY;
+  const expires   = Math.floor(Date.now() / 1000) + expiresIn;
+  const tokenPath = `/${videoId}/`;
 
-  const expires = Math.floor(Date.now() / 1000) + expiresIn;
-  const path    = `/${videoId}/playlist.m3u8`;
-  const token   = crypto
+  const token = crypto
     .createHash("sha256")
-    .update(tokenKey + path + expires)
-    .digest("hex");
+    .update(tokenKey + expires + tokenPath)
+    .digest("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
 
-  return `https://${cdnHost}${path}?token=${token}&expires=${expires}`;
+  return (
+    `https://${cdnHost}/${videoId}/playlist.m3u8` +
+    `?token=${token}&expires=${expires}&token_path=${tokenPath}`
+  );
 }

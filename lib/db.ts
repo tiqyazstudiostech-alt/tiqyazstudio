@@ -15,7 +15,7 @@ function createClient() {
 // if the cached instance actually has the current model delegates.
 export const db: PrismaClient = (() => {
   if (process.env.NODE_ENV === "production") return createClient();
-  if (!global.__prisma || !("title" in global.__prisma)) {
+  if (!global.__prisma || !("watchlistItem" in global.__prisma)) {
     global.__prisma = createClient();
   }
   return global.__prisma;

@@ -88,6 +88,8 @@ model User {
   subscription        Subscription?
   passwordResetTokens PasswordResetToken[]
   watchEvents         WatchEvent[]
+  watchProgress       WatchProgress[]
+  watchlistItems      WatchlistItem[]
 
   @@map("users")
 }
@@ -249,12 +251,13 @@ model Title {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  genres      Genre[]      @relation("TitleGenres")
-  languages   Language[]   @relation("TitleLanguages")
-  seasons     Season[]
-  episodes    Episode[]
-  collections Collection[] @relation("CollectionTitles")
-  watchEvents WatchEvent[]
+  genres         Genre[]         @relation("TitleGenres")
+  languages      Language[]      @relation("TitleLanguages")
+  seasons        Season[]
+  episodes       Episode[]
+  collections    Collection[]    @relation("CollectionTitles")
+  watchEvents    WatchEvent[]
+  watchlistItems WatchlistItem[]
 
   @@index([status])
   @@map("titles")
@@ -290,13 +293,30 @@ model Episode {
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  parentTitle Title      @relation(fields: [titleId], references: [id], onDelete: Cascade)
-  season      Season?    @relation(fields: [seasonId], references: [id])
-  watchEvents WatchEvent[]
+  parentTitle   Title          @relation(fields: [titleId], references: [id], onDelete: Cascade)
+  season        Season?        @relation(fields: [seasonId], references: [id])
+  watchEvents   WatchEvent[]
+  watchProgress WatchProgress[]
 
   @@index([titleId])
   @@index([bunnyVideoId])
   @@map("episodes")
+}
+
+model WatchProgress {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  episodeId   String   @map("episode_id")
+  positionSec Int      @map("position_sec")
+  durationSec Int?     @map("duration_sec")
+  completed   Boolean  @default(false)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  episode Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, episodeId])
+  @@map("watch_progress")
 }
 
 model Collection {
@@ -313,4 +333,17 @@ model Collection {
   titles Title[] @relation("CollectionTitles")
 
   @@map("collections")
+}
+
+model WatchlistItem {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  titleId   String   @map("title_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title Title @relation(fields: [titleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, titleId])
+  @@map("watchlist_items")
 }
