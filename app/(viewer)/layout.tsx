@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import { ViewerNav } from "@/components/viewer/viewer-nav";
 
 export default async function ViewerLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -18,5 +19,19 @@ export default async function ViewerLayout({ children }: { children: ReactNode }
     if (!profile?.onboardingCompleted) redirect("/onboarding");
   }
 
-  return <>{children}</>;
+  // Watch pages and onboarding are immersive — no nav chrome.
+  const isImmersive =
+    pathname.startsWith("/watch/") ||
+    pathname.startsWith("/onboarding");
+
+  if (isImmersive) {
+    return <>{children}</>;
+  }
+
+  return (
+    <>
+      <ViewerNav />
+      <div className="pt-14">{children}</div>
+    </>
+  );
 }
