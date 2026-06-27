@@ -48,6 +48,24 @@ enum EventType {
   SEARCH_NO_RESULTS
 }
 
+enum TitleType {
+  FILM
+  SERIES
+  PODCAST
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum VideoStatus {
+  PROCESSING
+  READY
+  ERROR
+}
+
 // ---------------------------------------------------------------------------
 // Auth.js v5 models (@auth/prisma-adapter)
 // ---------------------------------------------------------------------------
@@ -138,6 +156,7 @@ model Genre {
   displayOrder Int     @default(0) @map("display_order")
 
   profiles Profile[] @relation("ProfileGenres")
+  titles   Title[]   @relation("TitleGenres")
 
   @@map("genres")
 }
@@ -149,6 +168,7 @@ model Language {
   isActive Boolean @default(true) @map("is_active")
 
   profiles Profile[] @relation("ProfileLanguages")
+  titles   Title[]   @relation("TitleLanguages")
 
   @@map("languages")
 }
@@ -158,13 +178,13 @@ model Language {
 // ---------------------------------------------------------------------------
 
 model Profile {
-  id                   String   @id @default(cuid())
-  userId               String   @unique @map("user_id")
-  preferences          Json     @default("{}")
-  onboardingCompleted  Boolean  @default(false) @map("onboarding_completed")
-  avatarUrl            String?  @map("avatar_url")
-  createdAt            DateTime @default(now()) @map("created_at")
-  updatedAt            DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(cuid())
+  userId              String   @unique @map("user_id")
+  preferences         Json     @default("{}")
+  onboardingCompleted Boolean  @default(false) @map("onboarding_completed")
+  avatarUrl           String?  @map("avatar_url")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
 
   user               User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   genres             Genre[]    @relation("ProfileGenres")
@@ -199,9 +219,98 @@ model WatchEvent {
   metadata  Json?
   createdAt DateTime  @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title   Title?   @relation(fields: [titleId], references: [id], onDelete: SetNull)
+  episode Episode? @relation(fields: [episodeId], references: [id], onDelete: SetNull)
 
   @@index([userId, type])
   @@index([titleId])
   @@map("watch_events")
+}
+
+// ---------------------------------------------------------------------------
+// Content models
+// ---------------------------------------------------------------------------
+
+model Title {
+  id             String        @id @default(cuid())
+  type           TitleType
+  title          String
+  slug           String        @unique
+  synopsis       String?
+  releaseYear    Int?          @map("release_year")
+  maturityRating String?       @map("maturity_rating")
+  isPremium      Boolean       @default(false) @map("is_premium")
+  status         ContentStatus @default(DRAFT)
+  posterUrl      String?       @map("poster_url")
+  backdropUrl    String?       @map("backdrop_url")
+  trailerUrl     String?       @map("trailer_url")
+  isDeleted      Boolean       @default(false) @map("is_deleted")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  genres      Genre[]      @relation("TitleGenres")
+  languages   Language[]   @relation("TitleLanguages")
+  seasons     Season[]
+  episodes    Episode[]
+  collections Collection[] @relation("CollectionTitles")
+  watchEvents WatchEvent[]
+
+  @@index([status])
+  @@map("titles")
+}
+
+model Season {
+  id        String   @id @default(cuid())
+  titleId   String   @map("title_id")
+  number    Int
+  name      String?
+  isDeleted Boolean  @default(false) @map("is_deleted")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  title    Title     @relation(fields: [titleId], references: [id], onDelete: Cascade)
+  episodes Episode[]
+
+  @@map("seasons")
+}
+
+model Episode {
+  id           String      @id @default(cuid())
+  titleId      String      @map("title_id")
+  seasonId     String?     @map("season_id")
+  number       Int
+  title        String?
+  synopsis     String?
+  bunnyVideoId String?     @map("bunny_video_id")
+  status       VideoStatus @default(PROCESSING)
+  durationSec  Int?        @map("duration_sec")
+  thumbnailUrl String?     @map("thumbnail_url")
+  isDeleted    Boolean     @default(false) @map("is_deleted")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  parentTitle Title      @relation(fields: [titleId], references: [id], onDelete: Cascade)
+  season      Season?    @relation(fields: [seasonId], references: [id])
+  watchEvents WatchEvent[]
+
+  @@index([titleId])
+  @@index([bunnyVideoId])
+  @@map("episodes")
+}
+
+model Collection {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String?
+  displayOrder Int      @default(0) @map("display_order")
+  isActive     Boolean  @default(true) @map("is_active")
+  isDeleted    Boolean  @default(false) @map("is_deleted")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  titles Title[] @relation("CollectionTitles")
+
+  @@map("collections")
 }

@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Plan } from "@prisma/client";
+import { PrismaClient, Role, Plan, TitleType, ContentStatus, VideoStatus } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
@@ -84,6 +84,107 @@ async function main() {
     create: { userId: admin.id, plan: Plan.PREMIUM },
   });
   console.log("Seeded admin subscription (PREMIUM).");
+
+  // Resolve genre/language IDs needed for content seeding
+  const [drama, thriller, documentary, family] = await Promise.all([
+    prisma.genre.findUniqueOrThrow({ where: { slug: "drama"         }, select: { id: true } }),
+    prisma.genre.findUniqueOrThrow({ where: { slug: "thriller"      }, select: { id: true } }),
+    prisma.genre.findUniqueOrThrow({ where: { slug: "documentary"   }, select: { id: true } }),
+    prisma.genre.findUniqueOrThrow({ where: { slug: "family"        }, select: { id: true } }),
+  ]);
+  const [en, sw] = await Promise.all([
+    prisma.language.findUniqueOrThrow({ where: { code: "en" }, select: { id: true } }),
+    prisma.language.findUniqueOrThrow({ where: { code: "sw" }, select: { id: true } }),
+  ]);
+
+  // Seed FILM: "Nairobi Noir" — a FILM is a Title with a single Episode (no Season)
+  const film = await prisma.title.upsert({
+    where:  { slug: "nairobi-noir" },
+    update: {},
+    create: {
+      type:          TitleType.FILM,
+      title:         "Nairobi Noir",
+      slug:          "nairobi-noir",
+      synopsis:      "A detective unravels a web of corruption beneath Nairobi's glittering skyline.",
+      releaseYear:   2024,
+      maturityRating:"16+",
+      isPremium:     false,
+      status:        ContentStatus.PUBLISHED,
+      genres:    { connect: [{ id: drama.id }, { id: thriller.id }] },
+      languages: { connect: [{ id: en.id }, { id: sw.id }] },
+    },
+  });
+  await prisma.episode.upsert({
+    where:  { id: "seed-film-ep-1" },
+    update: {},
+    create: {
+      id:          "seed-film-ep-1",
+      titleId:     film.id,
+      number:      1,
+      title:       "Nairobi Noir",
+      synopsis:    "Feature film.",
+      status:      VideoStatus.READY,
+      durationSec: 5880,
+    },
+  });
+  console.log(`Seeded FILM: ${film.title} (id: ${film.id})`);
+
+  // Seed SERIES: "Safari Tales" — Title + Season 1 + 2 Episodes
+  const series = await prisma.title.upsert({
+    where:  { slug: "safari-tales" },
+    update: {},
+    create: {
+      type:          TitleType.SERIES,
+      title:         "Safari Tales",
+      slug:          "safari-tales",
+      synopsis:      "Follow wildlife rangers across East Africa's most breathtaking landscapes.",
+      releaseYear:   2025,
+      maturityRating:"PG",
+      isPremium:     true,
+      status:        ContentStatus.PUBLISHED,
+      genres:    { connect: [{ id: documentary.id }, { id: family.id }] },
+      languages: { connect: [{ id: en.id }, { id: sw.id }] },
+    },
+  });
+  const season1 = await prisma.season.upsert({
+    where:  { id: "seed-series-s1" },
+    update: {},
+    create: {
+      id:      "seed-series-s1",
+      titleId: series.id,
+      number:  1,
+      name:    "Into the Wild",
+    },
+  });
+  await prisma.episode.upsert({
+    where:  { id: "seed-series-s1e1" },
+    update: {},
+    create: {
+      id:          "seed-series-s1e1",
+      titleId:     series.id,
+      seasonId:    season1.id,
+      number:      1,
+      title:       "First Light",
+      synopsis:    "Rangers prepare for a rare predator census at dawn.",
+      status:      VideoStatus.READY,
+      durationSec: 2700,
+    },
+  });
+  await prisma.episode.upsert({
+    where:  { id: "seed-series-s1e2" },
+    update: {},
+    create: {
+      id:          "seed-series-s1e2",
+      titleId:     series.id,
+      seasonId:    season1.id,
+      number:      2,
+      title:       "The Migration",
+      synopsis:    "Millions of wildebeest thunder across the Mara River.",
+      status:      VideoStatus.READY,
+      durationSec: 2820,
+    },
+  });
+  console.log(`Seeded SERIES: ${series.title} (id: ${series.id}) — Season 1, 2 episodes.`);
 }
 
 main()
