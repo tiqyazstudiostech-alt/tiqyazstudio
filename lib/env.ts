@@ -15,18 +15,12 @@ const envSchema = z.object({
 
   // Bunny Stream
   BUNNY_API_KEY: z.string().min(1),
-  BUNNY_STREAM_LIBRARY_ID: z.string().min(1),
-  BUNNY_STREAM_CDN_HOSTNAME: z.string().min(1),
+  BUNNY_LIBRARY_ID: z.string().min(1),
+  BUNNY_CDN_HOSTNAME: z.string().min(1),
   BUNNY_TOKEN_AUTH_KEY: z.string().min(1),
   BUNNY_WEBHOOK_SECRET: z.string().min(1).optional(),
 
-  // Bunny Storage (images / attachments)
-  BUNNY_STORAGE_ZONE: z.string().min(1),
-  BUNNY_STORAGE_HOST: z.string().min(1),
-  BUNNY_STORAGE_ACCESS_KEY: z.string().min(1),
-  BUNNY_PUBLIC_CDN_URL: z.string().url(),
-
-  // Cloudflare R2 (alternative object storage)
+  // Cloudflare R2 (image storage)
   R2_ACCOUNT_ID: z.string().min(1),
   R2_ACCESS_KEY_ID: z.string().min(1),
   R2_SECRET_ACCESS_KEY: z.string().min(1),

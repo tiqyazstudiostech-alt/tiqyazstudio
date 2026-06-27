@@ -1,15 +1,14 @@
 import crypto from "node:crypto";
+import { env } from "@/lib/env";
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
 function requireStream() {
-  const libraryId = process.env.BUNNY_STREAM_LIBRARY_ID;
-  const apiKey    = process.env.BUNNY_API_KEY;
-  const cdnHost   = process.env.BUNNY_STREAM_CDN_HOSTNAME;
-  if (!libraryId || !apiKey || !cdnHost) {
-    throw new Error("Bunny Stream environment variables are not configured.");
-  }
-  return { libraryId, apiKey, cdnHost };
+  return {
+    libraryId: env.BUNNY_LIBRARY_ID,
+    apiKey:    env.BUNNY_API_KEY,
+    cdnHost:   env.BUNNY_CDN_HOSTNAME,
+  };
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -66,8 +65,7 @@ export function getThumbnailUrl(videoId: string): string {
 // Algorithm: SHA256(TOKEN_AUTH_KEY + path + expires), appended as ?token=…&expires=…
 export function getSignedPlaybackUrl(videoId: string, expiresIn = 86400): string {
   const { cdnHost } = requireStream();
-  const tokenKey = process.env.BUNNY_TOKEN_AUTH_KEY;
-  if (!tokenKey) throw new Error("BUNNY_TOKEN_AUTH_KEY is not configured.");
+  const tokenKey = env.BUNNY_TOKEN_AUTH_KEY;
 
   const expires = Math.floor(Date.now() / 1000) + expiresIn;
   const path    = `/${videoId}/playlist.m3u8`;

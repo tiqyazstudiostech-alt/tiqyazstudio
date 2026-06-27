@@ -153,18 +153,20 @@ export function SeasonsEditor({ titleId, seasons }: Props) {
               <div className="flex gap-2 items-center">
                 <Button type="submit" size="sm" loading={loading}>Save</Button>
                 <Button type="button" size="sm" variant="ghost" onClick={() => { setMode({ type: "idle" }); setError(null); }}>Cancel</Button>
-                <form
-                  className="ml-auto"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const fd = new FormData(e.currentTarget);
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="text-error ml-auto"
+                  onClick={() => {
+                    const fd = new FormData();
+                    fd.set("id", season.id);
+                    fd.set("titleId", titleId);
                     submit(softDeleteSeasonAction, fd);
                   }}
                 >
-                  <input type="hidden" name="id" value={season.id} />
-                  <input type="hidden" name="titleId" value={titleId} />
-                  <Button type="submit" size="sm" variant="ghost" className="text-error">Delete season</Button>
-                </form>
+                  Delete season
+                </Button>
               </div>
             </form>
           ) : (
@@ -204,18 +206,20 @@ export function SeasonsEditor({ titleId, seasons }: Props) {
                       <div className="flex gap-2 items-center">
                         <Button type="submit" size="sm" loading={loading}>Save</Button>
                         <Button type="button" size="sm" variant="ghost" onClick={() => { setMode({ type: "idle" }); setError(null); }}>Cancel</Button>
-                        <form
-                          className="ml-auto"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            const fd = new FormData(e.currentTarget);
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="text-error ml-auto"
+                          onClick={() => {
+                            const fd = new FormData();
+                            fd.set("id", ep.id);
+                            fd.set("titleId", titleId);
                             submit(softDeleteEpisodeAction, fd);
                           }}
                         >
-                          <input type="hidden" name="id" value={ep.id} />
-                          <input type="hidden" name="titleId" value={titleId} />
-                          <Button type="submit" size="sm" variant="ghost" className="text-error">Delete</Button>
-                        </form>
+                          Delete
+                        </Button>
                       </div>
                     </form>
 

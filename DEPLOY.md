@@ -53,12 +53,8 @@ needs to be set explicitly in **Production**.
 | Variable | Service |
 |---|---|
 | `BUNNY_API_KEY` | Bunny.net dashboard |
-| `BUNNY_STREAM_LIBRARY_ID` | Bunny Stream library settings |
-| `BUNNY_STREAM_CDN_HOSTNAME` | e.g. `vz-xxxxxxxx.b-cdn.net` |
-| `BUNNY_STORAGE_ZONE` | Bunny Storage zone name |
-| `BUNNY_STORAGE_HOST` | `storage.bunnycdn.com` |
-| `BUNNY_STORAGE_ACCESS_KEY` | Bunny Storage FTP password |
-| `BUNNY_PUBLIC_CDN_URL` | Pull zone URL |
+| `BUNNY_LIBRARY_ID` | Bunny Stream library settings |
+| `BUNNY_CDN_HOSTNAME` | e.g. `vz-xxxxxxxx.b-cdn.net` |
 | `RESEND_API_KEY` | Resend dashboard |
 | `PAYSTACK_SECRET_KEY` | Paystack dashboard (use test key for preview) |
 | `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY` | Paystack dashboard |
